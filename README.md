@@ -158,6 +158,11 @@ Average ignite tick : 1710.48
 ```
 
 
+## What?
+
+If you have no idea what I am talking about or how to install/run this [here](https://repl.it/@mcdallas/CrowdedBowedLinuxpc) is a repl.it link with the code from the first example. Just change the parameters you want and click run.
+
+
 ## Talents and Debuffs
 
 You can customize each mage by passing additional arguments. The full constructor looks like this:
