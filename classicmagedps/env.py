@@ -6,6 +6,7 @@ class FrostEnvironment(simpy.Environment):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.mages = []
         self.PRINT = True
         self.debuffs = Debuffs(self)
         self.meter = DamageMeter(self)
@@ -18,6 +19,20 @@ class FrostEnvironment(simpy.Environment):
     def p(self, msg):
         if self.PRINT:
             print(msg)
+
+    def add_mage(self, mage):
+        self.mages.append(mage)
+        mage.env = self
+
+    def add_mages(self, mages):
+        self.mages.extend(mages)
+        for mage in mages:
+            mage.env = self
+
+    def run(self, *args, **kwargs):
+        for mage in self.mages:
+            self.process(mage.rotation)
+        super().run(*args, **kwargs)
 
 
 class FireEnvironment(FrostEnvironment):

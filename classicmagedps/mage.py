@@ -1,14 +1,15 @@
 import simpy
 import random
 
+
 class Mage:
 
     def __init__(self,
-                 env,
                  name,
                  sp,
                  crit,
                  hit,
+                 env=None,
                  firepower=True,
                  dmf=False,
                  imp_scorch=True,
@@ -34,6 +35,8 @@ class Mage:
         self.piercing_ice = piercing_ice
         self.fullt2 = fullt2
         self._t2proc = False
+        if self.env:
+            self.env.mages.append(self)
 
     def _random_delay(self, secs=2):
         if secs:
@@ -47,7 +50,7 @@ class Mage:
             yield from self.fireball()
 
     def spam_fireballs(self, *args, **kwargs):
-        self.env.process(self._spam_fireballs(*args, **kwargs))
+        self.rotation = self._spam_fireballs(*args, **kwargs)
 
     def _spam_frostbolts(self, delay=2):
         yield from self._random_delay(delay)
@@ -56,7 +59,7 @@ class Mage:
             yield from self.frostbolt()
 
     def spam_frostbolts(self, *args, **kwargs):
-        self.env.process(self._spam_fireballs(*args, **kwargs))
+        self.rotation = self._spam_fireballs(*args, **kwargs)
 
     def _spam_scorch(self, delay=2):
         yield from self._random_delay(delay)
@@ -64,7 +67,7 @@ class Mage:
             yield from self.scorch()
 
     def spam_scorch(self, *args, **kwargs):
-        self.env.process(self._spam_scorch(*args, **kwargs))
+        self.rotation = self._spam_scorch(*args, **kwargs)
 
     def _one_scorch_then_fireballs(self, delay=2):
         """1 scorch then 9 fireballs rotation"""
@@ -76,7 +79,7 @@ class Mage:
                 yield from self.fireball()
 
     def one_scorch_then_fireballs(self, *args, **kwargs):
-        self.env.process(self._one_scorch_then_fireballs(*args, **kwargs))
+        self.rotation = self._one_scorch_then_fireballs(*args, **kwargs)
 
     def _one_pyro_one_scorch_then_fb(self, delay=1):
         yield from self._random_delay(delay)
@@ -89,7 +92,7 @@ class Mage:
         yield from self._one_scorch_then_fireballs(delay=0)
 
     def one_pyro_one_scorch_then_fb(self, *args, **kwargs):
-        self.env.process(self._one_pyro_one_scorch_then_fb(*args, **kwargs))
+        self.rotation = self._one_pyro_one_scorch_then_fb(*args, **kwargs)
 
     def _one_scorch_one_pyro_then_fb(self, delay=1):
         yield from self._random_delay(delay)
@@ -102,9 +105,9 @@ class Mage:
         yield from self._one_scorch_then_fireballs(delay=0)
 
     def one_scorch_one_pyro_then_fb(self, *args, **kwargs):
-        self.env.process(self._one_scorch_one_pyro_then_fb(*args, **kwargs))
+        self.rotation = self._one_scorch_one_pyro_then_fb(*args, **kwargs)
 
-    def one_scorch_one_frostbolt_then_fb(self, delay=1):
+    def _one_scorch_one_frostbolt_then_fb(self, delay=1):
         yield from self._random_delay(delay)
 
         yield from self.scorch()
@@ -113,6 +116,9 @@ class Mage:
             yield from self.fireball()
 
         yield from self._one_scorch_then_fireballs(delay=0)
+
+    def one_scorch_one_frostbolt_then_fb(self, *args, **kwargs):
+        self.rotation = self._one_scorch_one_frostbolt_then_fb(*args, **kwargs)
 
     def print(self, msg):
         self.env.p(f"{self.env.time()} - ({self.name}) {msg}")
@@ -258,16 +264,14 @@ class Mage:
 
 class FireMage(Mage):
     def __init__(self,
-                 env,
                  name,
                  sp,
                  crit,
                  hit,
                  dmf=False,
-                 fullt2=False
+                 **kwargs
                  ):
         super().__init__(
-            env=env,
             name=name,
             sp=sp,
             crit=crit,
@@ -279,7 +283,7 @@ class FireMage(Mage):
             wc=False,
             ai=False,
             piercing_ice=False,
-            fullt2=fullt2
+            **kwargs
         )
 
 
@@ -316,7 +320,7 @@ class ApFrostMage(Mage):
             yield from self.frostbolt()
 
     def ap_frostbolts(self, *args, **kwargs):
-        self.env.process(self._ap_frostbolts(*args, **kwargs))
+        self.rotation = self._ap_frostbolts(*args, **kwargs)
 
     def _wait_ap_frostbolts(self, delay=2):
         yield from self._random_delay(delay)
@@ -327,7 +331,7 @@ class ApFrostMage(Mage):
             yield from self.frostbolt()
 
     def wait_ap_frostbolts(self, *args, **kwargs):
-        self.env.process(self._wait_ap_frostbolts(*args, **kwargs))
+        self.rotation = self._wait_ap_frostbolts(*args, **kwargs)
 
 
 class WcMage(Mage):

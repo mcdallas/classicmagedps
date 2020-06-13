@@ -1,3 +1,8 @@
+
+def mean(sequence):
+    return round(sum(sequence)/len(sequence), 2)
+
+
 class DamageMeter:
     def __init__(self, env):
         self.env = env
