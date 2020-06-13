@@ -59,7 +59,7 @@ class Mage:
             yield from self.frostbolt()
 
     def spam_frostbolts(self, *args, **kwargs):
-        self.rotation = self._spam_fireballs(*args, **kwargs)
+        self.rotation = self._spam_frostbolts(*args, **kwargs)
 
     def _spam_scorch(self, delay=2):
         yield from self._random_delay(delay)
@@ -289,7 +289,6 @@ class FireMage(Mage):
 
 class ApFrostMage(Mage):
     def __init__(self,
-                 env,
                  name,
                  sp,
                  crit,
@@ -298,7 +297,6 @@ class ApFrostMage(Mage):
                  **kwargs
                  ):
         super().__init__(
-            env=env,
             name=name,
             sp=sp,
             crit=crit,
@@ -336,7 +334,6 @@ class ApFrostMage(Mage):
 
 class WcMage(Mage):
     def __init__(self,
-                 env,
                  name,
                  sp,
                  crit,
@@ -345,7 +342,6 @@ class WcMage(Mage):
                  **kwargs
                  ):
         super().__init__(
-            env=env,
             name=name,
             sp=sp,
             crit=crit,
