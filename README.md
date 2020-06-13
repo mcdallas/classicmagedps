@@ -2,6 +2,9 @@
 
 Work in progress Simulation Framework for estimating Mage DPS for World of Warcraft classic.
 
+## Installation
+
+`$ pip install classicmagedps`
 
 ## Usage
 
