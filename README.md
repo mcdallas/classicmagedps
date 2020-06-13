@@ -208,8 +208,8 @@ The full list of currently supported rotations is:
 * spam_fireballs()
 * spam_frostbolts()
 * one_scorch_then_fireballs()  # 1 scorch + 9 fireballs (repeated)
-* one_pyro_one_scorch_then_fb  # 1 scorch + 1 pyro + 6 fireballs (repeated)
-* one_scorch_one_frostbolt_then_fb()  # 1 scorch + 1 frostbolt + 8 fireballs (repeated) improved frostbolt is assumed
+* one_scorch_one_pyro_then_fb()  # 1 scorch + 1 pyro + 6 fireballs (repeated)
+* one_scorch_one_frostbolt_then_fb()  # 1 scorch + 1 frostbolt + 8 fireballs (repeated)
 
 
 for APFrostMage:
