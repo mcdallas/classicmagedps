@@ -1,9 +1,9 @@
-#classicmagedps
+# classicmagedps
 
 Work in progress Simulation Framework for estimating Mage DPS for World of Warcraft classic.
 
 
-##Usage
+## Usage
 
 For a single iteration:
 
