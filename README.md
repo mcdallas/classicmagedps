@@ -220,7 +220,7 @@ The full list of currently supported rotations is:
 * one_scorch_one_frostbolt_then_fb()  
 
  cast scorch if less than 5 imp.scorch stacks 
- or if 5 ignite stacks to keep it rolling) else cast fireball
+ or if 5 ignite stacks (to keep it rolling) else cast fireball
 * smart_scorch()  
 
 
