@@ -1,3 +1,4 @@
+from copy import deepcopy
 from tqdm import trange
 from collections import defaultdict
 from classicmagedps.env import FireEnvironment
@@ -24,7 +25,8 @@ class Simulation:
             env = self.env_class()
             env.debuffs.coe = self.coe
             env.PRINT = False
-            env.add_mages(self.mages)
+            mages = [deepcopy(mage) for mage in self.mages]
+            env.add_mages(mages)
 
             env.run(until=duration)
 
