@@ -14,6 +14,7 @@ class Simulation:
             'dps': defaultdict(list),
             'avg_mage_dps': [],
             'uptime': [],
+            '5 stack uptime': [],
             'avg_tick': []
         }
 
@@ -31,6 +32,7 @@ class Simulation:
                 self.results['dps'][mage].append(mdps)
             self.results['avg_mage_dps'].append(env.meter.raid_dmg())
             self.results['uptime'].append(env.ignite.uptime)
+            self.results['5 stack uptime'].append(env.ignite.uptime_5_stacks)
             self.results['avg_tick'].append(env.ignite.avg_tick)
 
         self.report()
@@ -41,6 +43,7 @@ class Simulation:
 
         print(f"Average mage dps: {mean(self.results['avg_mage_dps'])}")
         print(f"Average ignite uptime : {100 * mean(self.results['uptime'])}%")
+        print(f"Average 5 stack ignite uptime : {100 * mean(self.results['5 stack uptime'])}%")
         print(f"Average ignite tick : {mean(self.results['avg_tick'])}")
 
 

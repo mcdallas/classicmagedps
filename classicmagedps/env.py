@@ -82,6 +82,7 @@ class Ignite:
         self.last_crit = None
         self.counter = 0
         self._uptime = 0
+        self._5_stack_uptime = 0
         self.ticks = []
 
     def refresh(self, mage, dmg):
@@ -121,6 +122,9 @@ class Ignite:
                 self.drop()
             if self.active:
                 self._uptime += 0.1
+                if self.stacks == 5:
+                    self._5_stack_uptime += 0.1
+
             yield self.env.timeout(0.1)
 
     def tick(self):
@@ -152,9 +156,14 @@ class Ignite:
         return self._uptime / self.env.now
 
     @property
+    def uptime_5_stacks(self):
+        return self._5_stack_uptime/self.env.now
+
+    @property
     def avg_tick(self):
         return sum(self.ticks) / len(self.ticks)
 
     def report(self):
         print(f"Ignite uptime: {round(self.uptime * 100, 2)}%")
+        print(f"5 stack ignite uptime: {round(self.uptime_5_stacks * 100, 2)}%")
         print(f"Average tick: {round(self.avg_tick, 2)}")
