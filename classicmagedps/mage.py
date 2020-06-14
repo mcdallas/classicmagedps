@@ -175,11 +175,11 @@ class Mage:
         if not hit:
             dmg = 0
             self.print(f"{name} RESIST")
-            if self.combustion.charges:
+            if self.combustion.active:
                 self.combustion.crit_bonus += 10
         elif not crit:
             self.print(f"{name} {dmg}")
-            if self.combustion.charges:
+            if self.combustion.active:
                 self.combustion.crit_bonus += 10
 
         else:
@@ -188,7 +188,7 @@ class Mage:
             self.print(f"{name} **{dmg}**")
             self.env.ignite.refresh(self, dmg)
 
-            if self.combustion.charges:
+            if self.combustion.active:
                 self.combustion.charges -= 1
                 if self.combustion.charges == 0:
                     self.combustion.crit_bonus = 0
@@ -402,6 +402,7 @@ class Combustion(Cooldown):
         self.mage.print("Combustion")
         self.charges = 3
         self.crit_bonus = 10
+        self.used = True
 
 
 class MQG(Cooldown):
@@ -415,12 +416,12 @@ class MQG(Cooldown):
         self.mage.casting_time_modifier = 0.75
         self.active = True
         self.mage.print("MQG")
+        self.used = True
 
         def callback(self):
             yield self.mage.env.timeout(self.DURATION)
             self.mage.casting_time_modifier = 1
             self.active = False
-            self.used = True
 
         self.mage.env.process(callback(self))
 
@@ -446,11 +447,11 @@ class TOEP(Cooldown):
         self.mage.sp_bonus = 175
         self.active = True
         self.mage.print(self.__class__.__name__)
+        self.used = True
 
         def callback(self):
             yield self.mage.env.timeout(self.DURATION)
             self.mage.sp_bonus = 0
             self.active = False
-            self.used = True
 
         self.mage.env.process(callback(self))
