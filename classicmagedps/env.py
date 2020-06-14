@@ -148,6 +148,13 @@ class Ignite:
                 yield self.env.timeout(0.1)
 
     @property
+    def time_left(self):
+        if not self.last_crit:
+            return 0
+        seconds = max(4 - (self.env.now - self.last_crit), 0)
+        return round(seconds, 3)
+
+    @property
     def active(self):
         return self.owner is not None
 

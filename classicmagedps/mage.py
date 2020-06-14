@@ -96,6 +96,19 @@ class Mage:
                 self._use_cds(**cds)
                 yield from self.fireball()
 
+    def _smart_scorch(self, delay=2, **cds):
+        """Cast scorch if less than 5 imp scorch stacks or if 5 stack ignite (to keep it rolling) else cast fireball"""
+        yield from self._random_delay(delay)
+        while True:
+            self._use_cds(**cds)
+            if self.env.debuffs.scorch_stacks < 5 or (self.env.ignite.stacks == 5 and self.env.ignite.time_left > 1.5):
+                yield from self.scorch()
+            else:
+                yield from self.fireball()
+
+    def smart_scorch(self, *args, **kwargs):
+        self.rotation = self._smart_scorch(*args, **kwargs)
+
     def one_scorch_then_fireballs(self, *args, **kwargs):
         self.rotation = self._one_scorch_then_fireballs(*args, **kwargs)
 

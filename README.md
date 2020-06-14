@@ -203,15 +203,26 @@ All rotations include a random initial delay of 0-2 seconds. You can disable thi
 
 The full list of currently supported rotations is:
 
-```
-* spam_scorch()
-* spam_fireballs()
-* spam_frostbolts()
-* one_scorch_then_fireballs()  # 1 scorch + 9 fireballs (repeated)
-* one_scorch_one_pyro_then_fb()  # 1 scorch + 1 pyro + 6 fireballs (repeated)
-* one_scorch_one_frostbolt_then_fb()  # 1 scorch + 1 frostbolt + 8 fireballs (repeated)
 
-```
+* spam_scorch()
+
+* spam_fireballs()
+
+* spam_frostbolts()
+
+1 scorch + 9 fireballs (repeated)
+* one_scorch_then_fireballs()  
+
+ 1 scorch + 1 pyro + 6 fireballs (repeated)
+* one_scorch_one_pyro_then_fb() 
+
+1 scorch + 1 frostbolt + 8 fireballs (repeated)
+* one_scorch_one_frostbolt_then_fb()  
+
+ cast scorch if less than 5 imp.scorch stacks 
+ or if 5 ignite stacks to keep it rolling) else cast fireball
+* smart_scorch()  
+
 
 You can pass as arguments to each rotation when you want each mage to attempt
 to activate their cooldowns. For example `mage1.spam_frostbolts(ap=20, pi=30)` will
