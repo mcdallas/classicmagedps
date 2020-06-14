@@ -1,7 +1,18 @@
 import random
+from functools import partial
 
 
 class Mage:
+
+    ROTATIONS = [
+        'spam_fireballs',
+        'spam_scorch',
+        'spam_frostbolts',
+        'smart_scorch',
+        'one_scorch_then_fireballs',
+        'one_scorch_one_pyro_then_fb',
+        'one_scorch_one_frostbolt_then_fb'
+    ]
 
     def __init__(self,
                  name,
@@ -62,9 +73,6 @@ class Mage:
             self._use_cds(**cds)
             yield from self.fireball()
 
-    def spam_fireballs(self, *args, **kwargs):
-        self.rotation = self._spam_fireballs(*args, **kwargs)
-
     def _spam_frostbolts(self, delay=2, **cds):
         yield from self._random_delay(delay)
 
@@ -72,18 +80,12 @@ class Mage:
             self._use_cds(**cds)
             yield from self.frostbolt()
 
-    def spam_frostbolts(self, *args, **kwargs):
-        self.rotation = self._spam_frostbolts(*args, **kwargs)
-
     def _spam_scorch(self, delay=2, **cds):
         yield from self._random_delay(delay)
 
         while True:
             self._use_cds(**cds)
             yield from self.scorch()
-
-    def spam_scorch(self, *args, **kwargs):
-        self.rotation = self._spam_scorch(*args, **kwargs)
 
     def _one_scorch_then_fireballs(self, delay=2, **cds):
         """1 scorch then 9 fireballs rotation"""
@@ -106,12 +108,6 @@ class Mage:
             else:
                 yield from self.fireball()
 
-    def smart_scorch(self, *args, **kwargs):
-        self.rotation = self._smart_scorch(*args, **kwargs)
-
-    def one_scorch_then_fireballs(self, *args, **kwargs):
-        self.rotation = self._one_scorch_then_fireballs(*args, **kwargs)
-
     def _one_scorch_one_pyro_then_fb(self, delay=1, **cds):
         yield from self._random_delay(delay)
 
@@ -125,8 +121,17 @@ class Mage:
 
         yield from self._one_scorch_then_fireballs(delay=0, **cds)
 
-    def one_scorch_one_pyro_then_fb(self, *args, **kwargs):
-        self.rotation = self._one_scorch_one_pyro_then_fb(*args, **kwargs)
+    def _rotationgetter(self, name, *args, **kwargs):
+        def callback(mage):
+            rotation = getattr(mage, '_' + name)
+            return rotation(*args, **kwargs)
+        self.rotation = callback
+
+    def __getattr__(self, name):
+        if name not in self.ROTATIONS:
+            return self.__getattribute__(name)
+
+        return partial(self._rotationgetter, name=name)
 
     def _one_scorch_one_frostbolt_then_fb(self, delay=1, **cds):
         yield from self._random_delay(delay)
@@ -140,9 +145,6 @@ class Mage:
             yield from self.fireball()
 
         yield from self._one_scorch_then_fireballs(delay=0, **cds)
-
-    def one_scorch_one_frostbolt_then_fb(self, *args, **kwargs):
-        self.rotation = self._one_scorch_one_frostbolt_then_fb(*args, **kwargs)
 
     def print(self, msg):
         self.env.p(f"{self.env.time()} - ({self.name}) {msg}")

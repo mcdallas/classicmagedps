@@ -33,7 +33,7 @@ class FrostEnvironment(simpy.Environment):
     def run(self, *args, **kwargs):
         random.shuffle(self.mages)
         for mage in self.mages:
-            self.process(mage.rotation)
+            self.process(mage.rotation(mage))
         super().run(*args, **kwargs)
 
 
