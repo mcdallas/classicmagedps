@@ -1,4 +1,3 @@
-import simpy
 import random
 
 
@@ -35,6 +34,13 @@ class Mage:
         self.piercing_ice = piercing_ice
         self.fullt2 = fullt2
         self._t2proc = False
+        self.sp_bonus = 0
+        self.combustion = Combustion(self)
+        self.ap = AP(self)
+        self.pi = PI(self)
+        self.toep = TOEP(self)
+        self.mqg = MQG(self)
+
         if self.env:
             self.env.mages.append(self)
 
@@ -43,79 +49,84 @@ class Mage:
             delay = round(random.random() * secs, 2)
             yield self.env.timeout(delay)
 
-    def _spam_fireballs(self, delay=2):
+    def _use_cds(self, **kwargs):
+        for name, time in kwargs.items():
+            cd = getattr(self, name)
+            if cd.usable and self.env.now >= time:
+                cd.activate()
+
+    def _spam_fireballs(self, delay=2, **cds):
         yield from self._random_delay(delay)
 
         while True:
+            self._use_cds(**cds)
             yield from self.fireball()
 
     def spam_fireballs(self, *args, **kwargs):
         self.rotation = self._spam_fireballs(*args, **kwargs)
 
-    def _spam_frostbolts(self, delay=2):
+    def _spam_frostbolts(self, delay=2, **cds):
         yield from self._random_delay(delay)
 
         while True:
+            self._use_cds(**cds)
             yield from self.frostbolt()
 
     def spam_frostbolts(self, *args, **kwargs):
         self.rotation = self._spam_frostbolts(*args, **kwargs)
 
-    def _spam_scorch(self, delay=2):
+    def _spam_scorch(self, delay=2, **cds):
         yield from self._random_delay(delay)
+
         while True:
+            self._use_cds(**cds)
             yield from self.scorch()
 
     def spam_scorch(self, *args, **kwargs):
         self.rotation = self._spam_scorch(*args, **kwargs)
 
-    def _one_scorch_then_fireballs(self, delay=2):
+    def _one_scorch_then_fireballs(self, delay=2, **cds):
         """1 scorch then 9 fireballs rotation"""
         yield from self._random_delay(delay)
 
         while True:
+            self._use_cds(**cds)
             yield from self.scorch()
             for _ in range(9):
+                self._use_cds(**cds)
                 yield from self.fireball()
 
     def one_scorch_then_fireballs(self, *args, **kwargs):
         self.rotation = self._one_scorch_then_fireballs(*args, **kwargs)
 
-    def _one_pyro_one_scorch_then_fb(self, delay=1):
+    def _one_scorch_one_pyro_then_fb(self, delay=1, **cds):
         yield from self._random_delay(delay)
 
-        yield from self.pyroblast()
+        self._use_cds(**cds)
         yield from self.scorch()
-        for _ in range(6):
-            yield from self.fireball()
-
-        yield from self._one_scorch_then_fireballs(delay=0)
-
-    def one_pyro_one_scorch_then_fb(self, *args, **kwargs):
-        self.rotation = self._one_pyro_one_scorch_then_fb(*args, **kwargs)
-
-    def _one_scorch_one_pyro_then_fb(self, delay=1):
-        yield from self._random_delay(delay)
-
-        yield from self.scorch()
+        self._use_cds(**cds)
         yield from self.pyroblast()
         for _ in range(7):
+            self._use_cds(**cds)
             yield from self.fireball()
 
-        yield from self._one_scorch_then_fireballs(delay=0)
+        yield from self._one_scorch_then_fireballs(delay=0, **cds)
 
     def one_scorch_one_pyro_then_fb(self, *args, **kwargs):
         self.rotation = self._one_scorch_one_pyro_then_fb(*args, **kwargs)
 
-    def _one_scorch_one_frostbolt_then_fb(self, delay=1):
+    def _one_scorch_one_frostbolt_then_fb(self, delay=1, **cds):
         yield from self._random_delay(delay)
 
+        self._use_cds(**cds)
         yield from self.scorch()
+        self._use_cds(**cds)
         yield from self.frostbolt()
         for _ in range(8):
+            self._use_cds(**cds)
             yield from self.fireball()
 
-        yield from self._one_scorch_then_fireballs(delay=0)
+        yield from self._one_scorch_then_fireballs(delay=0, **cds)
 
     def one_scorch_one_frostbolt_then_fb(self, *args, **kwargs):
         self.rotation = self._one_scorch_one_frostbolt_then_fb(*args, **kwargs)
@@ -131,8 +142,7 @@ class Mage:
         yield from self._fire_spell(name='fireball', min_dmg=min_dmg, max_dmg=max_dmg, casting_time=casting_time)
 
     def _fire_spell(self, name, min_dmg, max_dmg, casting_time, crit_modifier=0):
-
-        casting_time *= self.casting_time_modifier
+        casting_time = max(casting_time * self.casting_time_modifier, 1.5)
         if self._t2proc:
             casting_time = 1.5
             self._t2proc = False
@@ -141,11 +151,12 @@ class Mage:
         hit_chance = min(83 + self.hit, 99)
         hit = random.randint(1, 100) <= hit_chance
 
-        crit = random.randint(1, 100) <= self.crit + crit_modifier
+        crit_chance = self.crit + crit_modifier + self.combustion.crit_bonus
+        crit = random.randint(1, 100) <= crit_chance
 
         dmg = random.randint(min_dmg, max_dmg)
         coeff = min(casting_time / 3.5, 1) if not name == 'fireball' else 1
-        dmg += self.sp * coeff
+        dmg += (self.sp + self.sp_bonus) * coeff
 
         if self.firepower:
             dmg *= 1.1  # Fire Power
@@ -164,14 +175,24 @@ class Mage:
         if not hit:
             dmg = 0
             self.print(f"{name} RESIST")
+            if self.combustion.charges:
+                self.combustion.crit_bonus += 10
         elif not crit:
             self.print(f"{name} {dmg}")
+            if self.combustion.charges:
+                self.combustion.crit_bonus += 10
 
         else:
 
             dmg = int(dmg * 1.5)
             self.print(f"{name} **{dmg}**")
             self.env.ignite.refresh(self, dmg)
+
+            if self.combustion.charges:
+                self.combustion.charges -= 1
+                if self.combustion.charges == 0:
+                    self.combustion.crit_bonus = 0
+                    self.print("Combustion ended")
 
         if name == 'scorch' and self.imp_scorch:
             self.env.debuffs.scorch()
@@ -182,7 +203,7 @@ class Mage:
                 self._t2proc = True
 
     def _frost_spell(self, name, min_dmg, max_dmg, casting_time):
-        casting_time *= self.casting_time_modifier
+        casting_time = max(casting_time * self.casting_time_modifier, 1.5)
         if self._t2proc:
             casting_time = 1.5
             self._t2proc = False
@@ -196,7 +217,7 @@ class Mage:
 
         dmg = random.randint(min_dmg, max_dmg)
         coeff = min(casting_time / 3.5, 1) if not name == 'frostbolt' else 6 / 7
-        dmg += self.sp * coeff
+        dmg += (self.sp + self.sp_bonus) * coeff
 
         if self.piercing_ice:
             dmg *= 1.06  # Piercing Ice
@@ -251,16 +272,6 @@ class Mage:
 
         yield from self._frost_spell(name='frostbolt', min_dmg=min_dmg, max_dmg=max_dmg, casting_time=casting_time)
 
-    def ap(self):
-        self.dmg_modifier = 1.3
-        self.print("AP")
-
-        def callback(self):
-            yield self.env.timeout(15)
-            self.dmg_modifier = 1
-
-        self.env.process(callback(self))
-
 
 class FireMage(Mage):
     def __init__(self,
@@ -311,26 +322,6 @@ class ApFrostMage(Mage):
             **kwargs
         )
 
-    def _ap_frostbolts(self, delay=2):
-        yield from self._random_delay(delay)
-        self.ap()
-        while True:
-            yield from self.frostbolt()
-
-    def ap_frostbolts(self, *args, **kwargs):
-        self.rotation = self._ap_frostbolts(*args, **kwargs)
-
-    def _wait_ap_frostbolts(self, delay=2):
-        yield from self._random_delay(delay)
-        for _ in range(6):
-            yield from self.frostbolt()
-        self.ap()
-        while True:
-            yield from self.frostbolt()
-
-    def wait_ap_frostbolts(self, *args, **kwargs):
-        self.rotation = self._wait_ap_frostbolts(*args, **kwargs)
-
 
 class WcMage(Mage):
     def __init__(self,
@@ -355,3 +346,111 @@ class WcMage(Mage):
             piercing_ice=True,
             **kwargs
         )
+
+
+class Cooldown:
+    DURATION = NotImplemented
+
+    def __init__(self, mage):
+        self.mage = mage
+        self.active = False
+        self.used = False
+
+    @property
+    def usable(self):
+        return not self.active and not self.used
+
+    def activate(self):
+        raise NotImplementedError
+
+
+class AP(Cooldown):
+    DURATION = 15
+    DMG_MOD = 1.3
+
+    @property
+    def usable(self):
+        return not self.active and not self.used and not self.mage.pi.active
+
+    def activate(self):
+        self.mage.dmg_modifier = self.DMG_MOD
+        self.active = True
+        self.mage.print(self.__class__.__name__)
+
+        def callback(self):
+            yield self.mage.env.timeout(self.DURATION)
+            self.mage.dmg_modifier = 1
+            self.active = False
+            self.used = True
+
+        self.mage.env.process(callback(self))
+
+
+class Combustion(Cooldown):
+
+    def __init__(self, mage):
+        self.mage = mage
+        self.charges = 0
+        self.crit_bonus = 0
+        self.used = False
+
+    @property
+    def active(self):
+        return self.charges > 0
+
+    def activate(self):
+        self.mage.print("Combustion")
+        self.charges = 3
+        self.crit_bonus = 10
+
+
+class MQG(Cooldown):
+    DURATION = 20
+
+    @property
+    def usable(self):
+        return not self.active and not self.used and not self.mage.toep.active
+
+    def activate(self):
+        self.mage.casting_time_modifier = 0.75
+        self.active = True
+        self.mage.print("MQG")
+
+        def callback(self):
+            yield self.mage.env.timeout(self.DURATION)
+            self.mage.casting_time_modifier = 1
+            self.active = False
+            self.used = True
+
+        self.mage.env.process(callback(self))
+
+
+class PI(AP):
+    DURATION = 15
+    DMG_MOD = 1.2
+
+    @property
+    def usable(self):
+        return not self.active and not self.used and not self.mage.ap.active
+
+
+class TOEP(Cooldown):
+    DURATION = 15
+    DMG_BONUS = 175
+
+    @property
+    def usable(self):
+        return not self.active and not self.used and not self.mage.mqg.active
+
+    def activate(self):
+        self.mage.sp_bonus = 175
+        self.active = True
+        self.mage.print(self.__class__.__name__)
+
+        def callback(self):
+            yield self.mage.env.timeout(self.DURATION)
+            self.mage.sp_bonus = 0
+            self.active = False
+            self.used = True
+
+        self.mage.env.process(callback(self))

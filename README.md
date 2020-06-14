@@ -198,7 +198,7 @@ sim = Simulation(env=FireEnvironment, coe=False, mages=[mage1, mage2, mage3, mag
 no consumables are assumed otherwise, you need to factor those in your total sp/crit
 
 
-## Available rotations
+## Rotations
 All rotations include a random initial delay of 0-2 seconds. You can disable this by passing the delay=0 parameter
 
 The full list of currently supported rotations is:
@@ -211,16 +211,11 @@ The full list of currently supported rotations is:
 * one_scorch_one_pyro_then_fb()  # 1 scorch + 1 pyro + 6 fireballs (repeated)
 * one_scorch_one_frostbolt_then_fb()  # 1 scorch + 1 frostbolt + 8 fireballs (repeated)
 
-
-for APFrostMage:
-
-* ap_frostbolts() # insta activate AP and spam frostbolts
-* wait_ap_frostbolts()  # 6 frostbolts then AP then frostbolts
 ```
 
+You can pass as arguments to each rotation when you want each mage to attempt
+to activate their cooldowns. For example `mage1.spam_frostbolts(ap=20, pi=30)` will
+tell the first mage to attempt to activate AP at the 20th second of the fight and 
+Power infusion at the 30th second
 
-## TODOs
-
-* Combustion/MQG support
-* PI support
-* Other trinkets
+Available cooldowns are: ap, pi, toep, combustion, mqg
