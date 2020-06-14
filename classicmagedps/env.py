@@ -1,4 +1,5 @@
 import simpy
+import random
 from classicmagedps.utils import DamageMeter
 
 
@@ -30,6 +31,7 @@ class FrostEnvironment(simpy.Environment):
             mage.env = self
 
     def run(self, *args, **kwargs):
+        random.shuffle(self.mages)
         for mage in self.mages:
             self.process(mage.rotation)
         super().run(*args, **kwargs)
