@@ -2,12 +2,15 @@
 
 Work in progress Simulation Framework for estimating Mage DPS for World of Warcraft classic.
 
+
 ## Installation
 
 `$ pip install classicmagedps`
 
 ## Usage
-
+<p align="center">
+        <a href="https://repl.it/@mcdallas/CrowdedBowedLinuxpc"><img src="https://repl.it/badge/github/mcdallas/classicmagedps" align="center" /></a>
+</p>
 For a single iteration:
 
 ``` python
@@ -160,8 +163,11 @@ Average ignite tick : 1710.48
 
 ## What?
 
-If you have no idea what I am talking about or how to install/run this [here](https://repl.it/@mcdallas/CrowdedBowedLinuxpc) is a repl.it link with the code from the first example. Just change the parameters you want and click run.
+If you have no idea what I am talking about or how to install/run this, click the button bellow to run the code from the first example. Just change the parameters you want and click run.
 
+<p align="center">
+        <a href="https://repl.it/@mcdallas/CrowdedBowedLinuxpc"><img src="https://repl.it/badge/github/mcdallas/classicmagedps" align="center" /></a>
+</p>
 
 ## Talents and Debuffs
 
