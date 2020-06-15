@@ -1,2 +1,2 @@
 language = "python3"
-run = "python examples/single_iteration.py"
+run = "clear; python examples/single_iteration.py"
