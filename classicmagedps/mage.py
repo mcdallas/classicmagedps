@@ -66,12 +66,12 @@ class Mage:
             if cd.usable and self.env.now >= time:
                 cd.activate()
 
-    def _spam_fireballs(self, delay=2, **cds):
+    def _spam_fireballs(self, delay=2, pyro_on_t2_proc=False, **cds):
         yield from self._random_delay(delay)
 
         while True:
             self._use_cds(**cds)
-            yield from self.fireball()
+            yield from self.fireball(pyro_on_t2_proc=pyro_on_t2_proc)
 
     def _spam_frostbolts(self, delay=2, **cds):
         yield from self._random_delay(delay)
@@ -87,7 +87,7 @@ class Mage:
             self._use_cds(**cds)
             yield from self.scorch()
 
-    def _one_scorch_then_fireballs(self, delay=2, **cds):
+    def _one_scorch_then_fireballs(self, delay=2, pyro_on_t2_proc=False, **cds):
         """1 scorch then 9 fireballs rotation"""
         yield from self._random_delay(delay)
 
@@ -96,9 +96,9 @@ class Mage:
             yield from self.scorch()
             for _ in range(9):
                 self._use_cds(**cds)
-                yield from self.fireball()
+                yield from self.fireball(pyro_on_t2_proc=pyro_on_t2_proc)
 
-    def _smart_scorch(self, delay=2, **cds):
+    def _smart_scorch(self, delay=2, pyro_on_t2_proc=False, **cds):
         """Cast scorch if less than 5 imp scorch stacks or if 5 stack ignite (to keep it rolling) else cast fireball"""
         yield from self._random_delay(delay)
         while True:
@@ -106,9 +106,9 @@ class Mage:
             if self.env.debuffs.scorch_stacks < 5 or (self.env.ignite.stacks == 5 and self.env.ignite.time_left > 1.5):
                 yield from self.scorch()
             else:
-                yield from self.fireball()
+                yield from self.fireball(pyro_on_t2_proc=pyro_on_t2_proc)
 
-    def _one_scorch_one_pyro_then_fb(self, delay=1, **cds):
+    def _one_scorch_one_pyro_then_fb(self, delay=1, pyro_on_t2_proc=False, **cds):
         yield from self._random_delay(delay)
 
         self._use_cds(**cds)
@@ -117,9 +117,9 @@ class Mage:
         yield from self.pyroblast()
         for _ in range(7):
             self._use_cds(**cds)
-            yield from self.fireball()
+            yield from self.fireball(pyro_on_t2_proc=pyro_on_t2_proc)
 
-        yield from self._one_scorch_then_fireballs(delay=0, **cds)
+        yield from self._one_scorch_then_fireballs(delay=0, pyro_on_t2_proc=pyro_on_t2_proc, **cds)
 
     def _rotationgetter(self, name, *args, **kwargs):
         def callback(mage):
@@ -133,7 +133,7 @@ class Mage:
 
         return partial(self._rotationgetter, name=name)
 
-    def _one_scorch_one_frostbolt_then_fb(self, delay=1, **cds):
+    def _one_scorch_one_frostbolt_then_fb(self, delay=1, pyro_on_t2_proc=False, **cds):
         yield from self._random_delay(delay)
 
         self._use_cds(**cds)
@@ -142,19 +142,22 @@ class Mage:
         yield from self.frostbolt()
         for _ in range(8):
             self._use_cds(**cds)
-            yield from self.fireball()
+            yield from self.fireball(pyro_on_t2_proc=pyro_on_t2_proc)
 
-        yield from self._one_scorch_then_fireballs(delay=0, **cds)
+        yield from self._one_scorch_then_fireballs(delay=0, pyro_on_t2_proc=pyro_on_t2_proc, **cds)
 
     def print(self, msg):
         self.env.p(f"{self.env.time()} - ({self.name}) {msg}")
 
-    def fireball(self):
+    def fireball(self, pyro_on_t2_proc=False):
         min_dmg = 561
         max_dmg = 715
         casting_time = 3
 
-        yield from self._fire_spell(name='fireball', min_dmg=min_dmg, max_dmg=max_dmg, casting_time=casting_time)
+        if pyro_on_t2_proc and self._t2proc:
+            yield from self.pyroblast()
+        else:
+            yield from self._fire_spell(name='fireball', min_dmg=min_dmg, max_dmg=max_dmg, casting_time=casting_time)
 
     def _fire_spell(self, name, min_dmg, max_dmg, casting_time, crit_modifier=0):
         casting_time = max(casting_time * self.casting_time_modifier, 1.5)
