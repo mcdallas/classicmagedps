@@ -81,26 +81,38 @@ class Ignite:
         self.ticks_left = 0
         self.owner = None
         self.stacks = 0
-        self.last_crit = None
-        self.counter = 0
         self._uptime = 0
         self._5_stack_uptime = 0
         self.ticks = []
+        self.PI = False
+        self.crit_this_window = False
 
     def refresh(self, mage, dmg):
         if not self.owner:
             self.owner = mage
-            self.counter += 1
-        self.last_crit = self.env.now
+
         if self.stacks <= 4:
             self.cum_dmg += dmg
             self.stacks += 1
+        if self.stacks == 1 and self.owner.pi.active:
+            self.PI = True
+
+        # existing ignite
+        if self.active and not self.crit_this_window and self.ticks_left == 1:
+            self.ticks_left += 1
+            self.crit_this_window = True
+        else:  # new ignite
+            self.ticks_left = 2
+            self.crit_this_window = True
 
     def _do_dmg(self):
         tick_dmg = self.cum_dmg * 0.2
 
         if self.env.debuffs.coe:
             tick_dmg *= 1.1  # ignite double dips on CoE
+
+        if self.PI:
+            tick_dmg *= 1.2
 
         tick_dmg *= 1 + self.env.debuffs.scorch_stacks * 0.03  # ignite double dips on imp.scorch
         if self.owner.dmf:
@@ -112,16 +124,16 @@ class Ignite:
         self.ticks.append(tick_dmg)
 
     def drop(self):
-        #         if self.stacks:
-        #             p(f"dropped ignite at {time(self.env)}")
+        if self.stacks:
+            self.owner.print(f"Ignite dropped")
         self.owner = None
         self.cum_dmg = 0
         self.stacks = 0
+        self.PI = False
+        self.ticks_left = 0
 
     def monitor(self):
         while True:
-            if self.last_crit and (self.env.now - self.last_crit) > 4.15:
-                self.drop()
             if self.active:
                 self._uptime += 0.1
                 if self.stacks == 5:
@@ -132,29 +144,16 @@ class Ignite:
     def tick(self):
         self.env.process(self.monitor())
         while True:
-            #
             if self.active:
-                ignite_id = self.counter
-                yield self.env.timeout(2)
-                #                 print(f"old id: {ignite_id} new_id: {self.counter}")
-                same_ignite = self.counter == ignite_id
-                if self.active:
-                    if same_ignite:
-                        self._do_dmg()
-                    else:
-                        next_tick = (self.last_crit + 2 - self.env.now)
-                        #                         p(f"next_tick: {next_tick}")
-                        yield self.env.timeout(next_tick)
-                        self._do_dmg()
+                if self.ticks_left:
+                    yield self.env.timeout(2)
+                    self._do_dmg()
+                    self.crit_this_window = False
+                    self.ticks_left -= 1
+                else:
+                    self.drop()
             else:
                 yield self.env.timeout(0.1)
-
-    @property
-    def time_left(self):
-        if not self.last_crit:
-            return 0
-        seconds = max(4 - (self.env.now - self.last_crit), 0)
-        return round(seconds, 3)
 
     @property
     def active(self):
