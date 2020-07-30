@@ -159,7 +159,7 @@ class Ignite:
 
     @property
     def time_left(self):
-        if self.active:
+        if self.active and self.last_tick:
             if self.ticks_left == 1:
                 return self.env.now - self.last_tick
             if self.ticks_left == 2:
