@@ -48,5 +48,13 @@ class Simulation:
         print(f"Average 5 stack ignite uptime : {100 * mean(self.results['5 stack uptime'])}%")
         print(f"Average ignite tick : {mean(self.results['avg_tick'])}")
 
-
-
+    @property
+    def records(self):
+        for avg_dps, uptime, uptime_5, avg_tick in zip(self.results['avg_mage_dps'], self.results['uptime'],
+                                                       self.results['5 stack uptime'], self.results['avg_tick']):
+            yield({
+                'avg_mage_dps': round(avg_dps, 1),
+                'ignite_uptime': round(100 * uptime, 2),
+                '5_stack_uptime': round(100 * uptime_5, 2),
+                'avg_tick': round(avg_tick, 1)
+            })

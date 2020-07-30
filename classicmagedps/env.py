@@ -86,6 +86,7 @@ class Ignite:
         self.ticks = []
         self.PI = False
         self.crit_this_window = False
+        self.last_tick = None
 
     def refresh(self, mage, dmg):
         if not self.owner:
@@ -150,10 +151,20 @@ class Ignite:
                     self._do_dmg()
                     self.crit_this_window = False
                     self.ticks_left -= 1
+                    self.last_tick = self.env.now
                 else:
                     self.drop()
             else:
                 yield self.env.timeout(0.1)
+
+    @property
+    def time_left(self):
+        if self.active:
+            if self.ticks_left == 1:
+                return self.env.now - self.last_tick
+            if self.ticks_left == 2:
+                return self.env.now - self.last_tick + 2
+        return 0
 
     @property
     def active(self):

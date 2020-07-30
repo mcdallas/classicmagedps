@@ -11,7 +11,10 @@ class Mage:
         'smart_scorch',
         'one_scorch_then_fireballs',
         'one_scorch_one_pyro_then_fb',
-        'one_scorch_one_frostbolt_then_fb'
+        'one_scorch_one_frostbolt_then_fb',
+        'one_scorch_one_frostbolt_perma_fb',
+        'scorch_pyro_spam_scorch',
+        'scorch_frostbolt_fireball_smart_scorch'
     ]
 
     def __init__(self,
@@ -108,6 +111,16 @@ class Mage:
             else:
                 yield from self.fireball(pyro_on_t2_proc=pyro_on_t2_proc)
 
+    def _scorch_frostbolt_fireball_smart_scorch(self, delay=2, pyro_on_t2_proc=False, **cds):
+        yield from self._random_delay(delay)
+
+        self._use_cds(**cds)
+        yield from self.scorch()
+        self._use_cds(**cds)
+        yield from self.frostbolt()
+        self._use_cds(**cds)
+        yield from self._smart_scorch(delay=0, pyro_on_t2_proc=pyro_on_t2_proc, **cds)
+
     def _one_scorch_one_pyro_then_fb(self, delay=1, pyro_on_t2_proc=False, **cds):
         yield from self._random_delay(delay)
 
@@ -145,6 +158,28 @@ class Mage:
             yield from self.fireball(pyro_on_t2_proc=pyro_on_t2_proc)
 
         yield from self._one_scorch_then_fireballs(delay=0, pyro_on_t2_proc=pyro_on_t2_proc, **cds)
+
+    def _one_scorch_one_frostbolt_perma_fb(self, delay=1, pyro_on_t2_proc=False, **cds):
+        yield from self._random_delay(delay)
+
+        self._use_cds(**cds)
+        yield from self.scorch()
+        self._use_cds(**cds)
+        yield from self.frostbolt()
+        while True:
+            self._use_cds(**cds)
+            yield from self.fireball(pyro_on_t2_proc=pyro_on_t2_proc)
+
+    def _scorch_pyro_spam_scorch(self, delay=1, pyro_on_t2_proc=False, **cds):
+        yield from self._random_delay(delay)
+
+        self._use_cds(**cds)
+        yield from self.scorch()
+        self._use_cds(**cds)
+        yield from self.pyroblast()
+        while True:
+            self._use_cds(**cds)
+            yield from self.scorch()
 
     def print(self, msg):
         self.env.p(f"{self.env.time()} - ({self.name}) {msg}")
