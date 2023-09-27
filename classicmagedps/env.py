@@ -82,6 +82,7 @@ class Ignite:
         self.owner = None
         self.stacks = 0
         self._uptime = 0
+        self._3_stack_uptime = 0
         self._5_stack_uptime = 0
         self.ticks = []
         self.PI = False
@@ -91,19 +92,31 @@ class Ignite:
         if not self.owner:
             self.owner = mage
 
-        if self.stacks <= 4:
-            self.cum_dmg += dmg
-            self.stacks += 1
-        if self.stacks == 1 and self.owner.pi.active:
-            self.PI = True
+        single_stack_extend = self.stacks == 1 and self.ticks_left == 2
+        multi_stack_extend = self.stacks > 1 and self.ticks_left >= 1
+
+        # self.env.p(
+        #     f"Ignite refresh ticks left {self.ticks_left} stacks={self.stacks} single={single_stack_extend} multi={multi_stack_extend}")
 
         # existing ignite
-        if self.active and not self.crit_this_window and self.ticks_left == 1:
-            self.ticks_left += 1
-            self.crit_this_window = True
-        else:  # new ignite
+        if self.active and (single_stack_extend or multi_stack_extend):
+            if self.stacks <= 4:
+                self.cum_dmg += dmg
+                self.stacks += 1
+            if self.owner.pi.active:
+                self.PI = True
+
             self.ticks_left = 2
             self.crit_this_window = True
+
+            # self.env.p(f"Ignite refresh extend ticks left {self.ticks_left}")
+        else:  # new ignite
+            self.cum_dmg = dmg
+            self.stacks = 1
+            self.owner = mage
+            self.ticks_left = 3
+            self.crit_this_window = True
+            # self.env.p(f"New ignite ticks left {self.ticks_left}")
 
     def _do_dmg(self):
         tick_dmg = self.cum_dmg * 0.2
@@ -119,7 +132,8 @@ class Ignite:
             tick_dmg *= 1.1  # ignite double dips on DMF
 
         tick_dmg = int(tick_dmg)
-        self.env.p(f"{self.env.time()} - ({self.owner.name}) ignite ({self.stacks}) tick {tick_dmg} ")
+        self.env.p(
+            f"{self.env.time()} - ({self.owner.name}) ({self.stacks}) ignite tick {tick_dmg} ticks remaining {self.ticks_left}")
         self.env.meter.register(self.owner, tick_dmg)
         self.ticks.append(tick_dmg)
 
@@ -131,29 +145,37 @@ class Ignite:
         self.stacks = 0
         self.PI = False
         self.ticks_left = 0
+        self.crit_this_window = False
 
     def monitor(self):
         while True:
             if self.active:
-                self._uptime += 0.1
+                self._uptime += 0.05
+                if self.stacks >= 3:
+                    self._3_stack_uptime += 0.05
                 if self.stacks == 5:
-                    self._5_stack_uptime += 0.1
+                    self._5_stack_uptime += 0.05
 
-            yield self.env.timeout(0.1)
+            yield self.env.timeout(0.05)
 
     def tick(self):
         self.env.process(self.monitor())
         while True:
             if self.active:
+                # process ignite tick
                 if self.ticks_left:
-                    yield self.env.timeout(2)
+                    self.ticks_left -= 1
                     self._do_dmg()
                     self.crit_this_window = False
-                    self.ticks_left -= 1
-                else:
-                    self.drop()
+
+                    if self.ticks_left == 0:
+                        self.drop()
+                    else:
+                        # first ignite detected after .05 seconds but ticks immediately
+                        # so account for that in yield
+                        yield self.env.timeout(2) if self.stacks == 1 else self.env.timeout(1.95)
             else:
-                yield self.env.timeout(0.1)
+                yield self.env.timeout(0.05)
 
     @property
     def active(self):
@@ -164,14 +186,21 @@ class Ignite:
         return self._uptime / self.env.now
 
     @property
+    def uptime_gte_3_stacks(self):
+        return self._3_stack_uptime / self.env.now
+
+    @property
     def uptime_5_stacks(self):
-        return self._5_stack_uptime/self.env.now
+        return self._5_stack_uptime / self.env.now
 
     @property
     def avg_tick(self):
+        if not self.ticks:
+            return 0
         return sum(self.ticks) / len(self.ticks)
 
     def report(self):
         print(f"Ignite uptime: {round(self.uptime * 100, 2)}%")
+        print(f">=3 stack ignite uptime: {round(self.uptime_gte_3_stacks * 100, 2)}%")
         print(f"5 stack ignite uptime: {round(self.uptime_5_stacks * 100, 2)}%")
         print(f"Average tick: {round(self.avg_tick, 2)}")

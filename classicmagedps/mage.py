@@ -103,7 +103,17 @@ class Mage:
         yield from self._random_delay(delay)
         while True:
             self._use_cds(**cds)
-            if self.env.debuffs.scorch_stacks < 5 or (self.env.ignite.stacks == 5 and self.env.ignite.time_left > 1.5):
+            if self.env.debuffs.scorch_stacks < 5 or self.env.ignite.stacks == 5:
+                yield from self.scorch()
+            else:
+                yield from self.fireball(pyro_on_t2_proc=pyro_on_t2_proc)
+
+    def _smart_scorch_fireblast(self, delay=2, pyro_on_t2_proc=False, **cds):
+        """Cast scorch if less than 5 imp scorch stacks or if 5 stack ignite (to keep it rolling) else cast fireball"""
+        yield from self._random_delay(delay)
+        while True:
+            self._use_cds(**cds)
+            if self.env.debuffs.scorch_stacks < 5 or self.env.ignite.stacks == 5:
                 yield from self.scorch()
             else:
                 yield from self.fireball(pyro_on_t2_proc=pyro_on_t2_proc)
@@ -201,7 +211,6 @@ class Mage:
                 self.combustion.crit_bonus += 10
 
         else:
-
             dmg = int(dmg * 1.5)
             self.print(f"{name} **{dmg}**")
             self.env.ignite.refresh(self, dmg)
@@ -268,6 +277,15 @@ class Mage:
                 self._t2proc = True
 
     def scorch(self):
+        min_dmg = 237
+        max_dmg = 280
+        casting_time = 1.5
+        crit_modifier = 4 if self.incineration else 0
+
+        yield from self._fire_spell(name='scorch', min_dmg=min_dmg, max_dmg=max_dmg, casting_time=casting_time,
+                                    crit_modifier=crit_modifier)
+
+    def fire_blast(self):
         min_dmg = 237
         max_dmg = 280
         casting_time = 1.5

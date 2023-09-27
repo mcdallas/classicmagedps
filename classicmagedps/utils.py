@@ -1,5 +1,7 @@
 
 def mean(sequence):
+    if not sequence:
+        return 0
     return round(sum(sequence)/len(sequence), 2)
 
 
