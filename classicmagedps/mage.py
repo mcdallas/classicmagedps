@@ -186,6 +186,7 @@ class Mage:
         casting_time = 3
 
         if pyro_on_t2_proc and self._t2proc:
+            yield self.env.timeout(self.lag * 2)  # delay in reacting to t2 proc
             yield from self.pyroblast(casting_time=0)
         else:
             yield from self._fire_spell(name='fireball', min_dmg=min_dmg, max_dmg=max_dmg, casting_time=casting_time)
@@ -193,7 +194,7 @@ class Mage:
     def _fire_spell(self, name, min_dmg, max_dmg, casting_time, crit_modifier=0, cooldown=0.0):
         casting_time *= self.casting_time_modifier
         if self._t2proc:
-            cooldown = 1.5 + self.lag * 2  # delay in reacting to t2 proc
+            cooldown = 1.5
             self._t2proc = False
             self.print("T2 proc")
 
