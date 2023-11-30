@@ -12,6 +12,8 @@ class Simulation:
         self.mages = mages or []
         self.coe = coe
         self.results = {
+            'total_spell_dmg': [],
+            'total_ignite_dmg': [],
             'dps': defaultdict(list),
             'avg_mage_dps': [],
             'uptime': [],
@@ -30,6 +32,9 @@ class Simulation:
             env.add_mages(mages)
 
             env.run(until=duration)
+            self.results['total_spell_dmg'].append(env.total_spell_dmg)
+            self.results['total_ignite_dmg'].append(env.total_ignite_dmg)
+
 
             for mage, mdps in env.meter.dps().items():
                 self.results['dps'][mage].append(mdps)
@@ -44,6 +49,9 @@ class Simulation:
     def report(self):
         for mage in self.results['dps']:
             print(f"{mage} average DPS : {mean(self.results['dps'][mage])}")
+
+        print(f"Total spell dmg: {mean(self.results['total_spell_dmg'])}")
+        print(f"Total Ignite dmg: {mean(self.results['total_ignite_dmg'])}")
 
         print(f"Average mage dps: {mean(self.results['avg_mage_dps'])}")
         print(f"Average >=1 stack uptime : {100 * mean(self.results['uptime'])}%")
