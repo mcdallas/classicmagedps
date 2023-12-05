@@ -122,7 +122,11 @@ class Mage:
         yield from self._random_delay(delay)
         while True:
             self._use_cds(**cds)
-            if self.env.debuffs.scorch_stacks < 5 or self.env.ignite.stacks == 5:
+            if self.env.ignite.stacks == 5 and self.fire_blast_remaining_cd <= 0:
+                yield from self.fire_blast()
+                self.fire_blast_remaining_cd = self.fire_blast_cooldown - 1.5
+                # fire blast cd - gcd
+            elif self.env.debuffs.scorch_stacks < 5 or self.env.ignite.stacks == 5:
                 yield from self.scorch()
                 self.fire_blast_remaining_cd -= 1.5
             else:
@@ -133,10 +137,6 @@ class Mage:
                 else:
                     yield from self.fireball(pyro_on_t2_proc=pyro_on_t2_proc)
                     self.fire_blast_remaining_cd -= 3
-
-                if self.fire_blast_remaining_cd <= 0:
-                    yield from self.fire_blast()
-                    self.fire_blast_remaining_cd = self.fire_blast_cooldown - 1.5  # fire blast cd - gcd
 
     def _one_scorch_one_pyro_then_fb(self, delay=1, pyro_on_t2_proc=True, **cds):
         yield from self._random_delay(delay)

@@ -1,13 +1,22 @@
 from classicmagedps import FireEnvironment, FireMage, ApFrostMage, Simulation, WcMage
 
-t2_mage = FireMage(name='t2_mage', sp=914, crit=20.91, hit=16, fullt2=True)
-reg_mage = FireMage(name='reg_mage', sp=945, crit=28.34, hit=16, fullt2=False)
+reg_mage1 = FireMage(name='mage1', sp=945, crit=30, hit=16, fullt2=False)
+reg_mage2 = FireMage(name='mage2', sp=945, crit=30, hit=16, fullt2=False)
+reg_mage3 = FireMage(name='mage3', sp=945, crit=30, hit=16, fullt2=False)
+reg_mage4 = FireMage(name='mage4', sp=945, crit=30, hit=16, fullt2=False)
 
-t2_mage.smart_scorch()
-reg_mage.smart_scorch()
+reg_mage1.smart_scorch_and_fireblast()
+reg_mage2.smart_scorch_and_fireblast()
+reg_mage3.smart_scorch_and_fireblast()
+reg_mage4.smart_scorch_and_fireblast()
 
-sim = Simulation(env=FireEnvironment, mages=[t2_mage])
-sim.run(iterations=5000, duration=200)
+# reg_mage1.smart_scorch()
+# reg_mage2.smart_scorch()
+# reg_mage3.smart_scorch()
+# reg_mage4.smart_scorch()
 
-sim = Simulation(env=FireEnvironment, mages=[reg_mage])
-sim.run(iterations=5000, duration=200)
+sim = Simulation(env=FireEnvironment, mages=[reg_mage1, reg_mage2, reg_mage3, reg_mage4])
+sim.run(iterations=2500, duration=200)
+
+# sim = Simulation(env=FireEnvironment, mages=[reg_mage1, reg_mage2, reg_mage3, reg_mage4])
+# sim.run(iterations=5000, duration=200)
