@@ -123,8 +123,8 @@ class Debuffs:
             for dot in self.fireball_dots:
                 dot.timer -= 1
                 if dot.timer % 2 == 0:
-                    self.env.p(
-                        f"{self.env.time()} - ({dot.owner.name}) fireball tick {dot.tick_dmg()} time remaining {dot.timer}")
+                    # self.env.p(
+                    #     f"{self.env.time()} - ({dot.owner.name}) fireball tick {dot.tick_dmg()} time remaining {dot.timer}")
                     self.env.meter.register(dot.owner, dot.tick_dmg())
                 if dot.timer <= 0:
                     self.fireball_dots.remove(dot)
