@@ -47,7 +47,7 @@ class Mage:
         self.ai = ai
         self.piercing_ice = piercing_ice
         self.fullt2 = fullt2
-        self._t2proc = False
+        self._t2proc = -1
         self.sp_bonus = 0
         self.combustion = Combustion(self)
         self.ap = AP(self)
@@ -185,18 +185,21 @@ class Mage:
         max_dmg = 715
         casting_time = 3
 
-        if pyro_on_t2_proc and self._t2proc:
-            yield self.env.timeout(self.lag * 2)  # delay in reacting to t2 proc
-            yield from self.pyroblast(casting_time=0)
+        if pyro_on_t2_proc and self._t2proc >= 0:
+            yield self.env.timeout(0.05)  # small delay between spells
+            yield from self.pyroblast()
         else:
             yield from self._fire_spell(name='fireball', min_dmg=min_dmg, max_dmg=max_dmg, casting_time=casting_time)
 
     def _fire_spell(self, name, min_dmg, max_dmg, casting_time, crit_modifier=0, cooldown=0.0):
         casting_time *= self.casting_time_modifier
-        if self._t2proc:
+        if self._t2proc >= 0:
+            casting_time = 0
             cooldown = 1.5
-            self._t2proc = False
-            self.print("T2 proc")
+            self._t2proc = -1
+            self.print("T2 proc used")
+        elif self._t2proc == 1:
+            self._t2proc = 0 # delay using t2 until next spell
 
         hit_chance = min(83 + self.hit, 99)
         hit = random.randint(1, 100) <= hit_chance
@@ -257,7 +260,8 @@ class Mage:
         self.env.meter.register(self, dmg)
         if self.fullt2 and name == 'fireball':
             if random.randint(1, 100) <= 10:
-                self._t2proc = True
+                self._t2proc = 1
+                self.print("T2 proc")
 
         # handle gcd
         if cooldown:
@@ -265,10 +269,13 @@ class Mage:
 
     def _frost_spell(self, name, min_dmg, max_dmg, casting_time):
         casting_time = max(casting_time * self.casting_time_modifier, 1.5)
-        if self._t2proc:
-            casting_time = 1.5 + self.lag * 2  # delay in reacting to t2 proc
-            self._t2proc = False
-            self.print("T2 proc")
+        if self._t2proc == 0:
+            casting_time = 0
+            cooldown = 1.5
+            self._t2proc = -1
+            self.print("T2 proc used")
+        elif self._t2proc == 1:
+            self._t2proc = 0 # delay using t2 until next spell
 
         hit_chance = min(83 + self.hit, 99)
         hit = random.randint(1, 100) <= hit_chance
@@ -308,7 +315,8 @@ class Mage:
         self.env.meter.register(self, dmg)
         if self.fullt2 and name == 'frostbolt':
             if random.randint(1, 100) <= 10:
-                self._t2proc = True
+                self._t2proc = 1
+                self.print("T2 proc")
 
     def scorch(self):
         min_dmg = 237
