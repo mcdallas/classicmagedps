@@ -9,6 +9,8 @@ class FrostEnvironment(simpy.Environment):
         super().__init__(*args, **kwargs)
         self.mages = []
         self.PRINT = True
+        self.total_spell_dmg = 0
+        self.total_ignite_dmg = 0
         self.debuffs = Debuffs(self)
         self.meter = DamageMeter(self)
         self.process(self.debuffs.run())
@@ -40,8 +42,6 @@ class FrostEnvironment(simpy.Environment):
 class FireEnvironment(FrostEnvironment):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.total_spell_dmg = 0
-        self.total_ignite_dmg = 0
         self.ignite = Ignite(self)
         self.process(self.ignite.tick())
 

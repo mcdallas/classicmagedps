@@ -39,10 +39,12 @@ class Simulation:
             for mage, mdps in env.meter.dps().items():
                 self.results['dps'][mage].append(mdps)
             self.results['avg_mage_dps'].append(env.meter.raid_dmg())
-            self.results['uptime'].append(env.ignite.uptime)
-            self.results['>=3 stack uptime'].append(env.ignite.uptime_gte_3_stacks)
-            self.results['5 stack uptime'].append(env.ignite.uptime_5_stacks)
-            self.results['avg_tick'].append(env.ignite.avg_tick)
+
+            if hasattr(env, 'ignite'):
+                self.results['uptime'].append(env.ignite.uptime)
+                self.results['>=3 stack uptime'].append(env.ignite.uptime_gte_3_stacks)
+                self.results['5 stack uptime'].append(env.ignite.uptime_5_stacks)
+                self.results['avg_tick'].append(env.ignite.avg_tick)
 
         self.report()
 
