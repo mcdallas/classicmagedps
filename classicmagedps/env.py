@@ -75,8 +75,8 @@ class Debuffs:
         self.scorch_stacks = 0
         self.scorch_timer = 0
         self.coe = coe
-        self.wc_stacks = 0
-        self.wc_timer = 0
+        self.winters_chill_stacks = 0
+        self.winters_chill_timer = 0
 
         self.fireball_dots = []
         self.pyroblast_dots = []
@@ -85,9 +85,9 @@ class Debuffs:
         self.scorch_stacks = min(self.scorch_stacks + 1, 5)
         self.scorch_timer = 30
 
-    def wc(self):
-        self.wc_stacks = min(self.wc_stacks + 1, 5)
-        self.wc_timer = 30
+    def winters_chill(self):
+        self.winters_chill_stacks = min(self.winters_chill_stacks + 1, 5)
+        self.winters_chill_timer = 30
 
     def fireball_dot(self, owner):
         # check if dot already exists
@@ -115,9 +115,9 @@ class Debuffs:
             self.scorch_timer = max(self.scorch_timer - 1, 0)
             if not self.scorch_timer:
                 self.scorch_stacks = 0
-            self.wc_timer = max(self.wc_stacks - 1, 0)
-            if not self.wc_timer:
-                self.wc_stacks = 0
+            self.winters_chill_timer = max(self.winters_chill_stacks - 1, 0)
+            if not self.winters_chill_timer:
+                self.winters_chill_stacks = 0
 
             # check for fireball dots
             for dot in self.fireball_dots:
@@ -170,7 +170,7 @@ class Ignite:
             if self.stacks <= 4:
                 self.cum_dmg += dmg
                 self.stacks += 1
-            if self.owner.pi.active:
+            if self.owner.power_infusion.active:
                 self.PI = True
 
             self.ticks_left = 2

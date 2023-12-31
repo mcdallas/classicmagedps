@@ -9,7 +9,7 @@ mage4 = FireMage(name='Duncan', sp=525, crit=28, hit=9)
 
 env.add_mages([mage1, mage2, mage3, mage4])
 
-mage1.one_scorch_one_pyro_then_fb(ap=5, pi=6, mqg=7)
+mage1.one_scorch_one_pyro_then_fb(arcane_power=5, power_infusion=6, mqg=7)
 mage2.one_scorch_one_pyro_then_fb(combustion=10, mqg=10)
 mage3.one_scorch_one_pyro_then_fb()
 mage4.one_scorch_one_pyro_then_fb()

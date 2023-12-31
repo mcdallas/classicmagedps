@@ -10,11 +10,11 @@ eddie = ApFrostMage(name='Eddie', sp=570, crit=33, hit=15)
 
 env.add_mages([alice, bob, charlie, duncan, eddie])
 
-alice.spam_frostbolts(ap=0, mqg=0)
+alice.spam_frostbolts(arcane_power=0, mqg=0)
 bob.spam_frostbolts()
-charlie.spam_frostbolts(ap=15)
-duncan.spam_frostbolts(ap=15)
-eddie.spam_frostbolts(ap=15)
+charlie.spam_frostbolts(arcane_power=15)
+duncan.spam_frostbolts(arcane_power=15)
+eddie.spam_frostbolts(arcane_power=15)
 
 env.run(until=60)
 env.meter.report()
